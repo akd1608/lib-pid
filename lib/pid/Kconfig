@@ -1,0 +1,28 @@
+# Copyright (c) 2021, Legrand North America, LLC.
+# SPDX-License-Identifier: Apache-2.0
+
+config PID_CONTROLLER
+	bool "pid controller Support"
+	help
+	  This option enables the pid controller library
+
+if PID_CONTROLLER
+
+config PID_CONTROLLING_TIME_DEFAULT
+	int "default controlling time"
+	default 100
+	help
+	  set default controlling time for calculation new controling value
+
+config PID_CONTROLLER_FLUSH_BY_NEW_SETPOINT
+	bool "deactivate memory for action inbetween setpoints"
+
+config PID_FILTER_COEFFICIENT_ALPHA
+	int "number for setting damping derivative part of pid multiply by 1000"
+	default 0
+
+config PID_FILTER_CONSTRAIN_SUM
+	int "number for constrain integration sum multiply by 1000"
+	default 1000000
+
+endif # PID_CONTROLLER
