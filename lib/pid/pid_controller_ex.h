@@ -5,6 +5,7 @@
 #ifndef LIB_PID_EX_H
 #define LIB_PID_EX_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
 
@@ -56,6 +57,7 @@ typedef struct {
 typedef struct {
 	double min;
 	double max;
+	bool active; /* false until a limit was set */
 } pid_constrain_t;
 
 typedef struct {

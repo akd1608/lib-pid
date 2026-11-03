@@ -18,8 +18,12 @@ config PID_CONTROLLER_FLUSH_BY_NEW_SETPOINT
 	bool "deactivate memory for action inbetween setpoints"
 
 config PID_FILTER_COEFFICIENT_ALPHA
-	int "number for setting damping derivative part of pid multiply by 1000"
-	default 0
+	int "weight of the newest derivative step, multiply by 1000"
+	default 1000
+	range 0 1000
+	help
+	  Classic form only.  1000 uses the newest step alone, smaller values
+	  mix in the step before and smooth the derivative.
 
 config PID_FILTER_CONSTRAIN_SUM
 	int "number for constrain integration sum multiply by 1000"
