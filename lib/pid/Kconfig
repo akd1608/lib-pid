@@ -25,4 +25,13 @@ config PID_FILTER_CONSTRAIN_SUM
 	int "number for constrain integration sum multiply by 1000"
 	default 1000000
 
+config PID_SAMPLE_GAP_FACTOR
+	int "pause, in regular steps, that counts as one step only"
+	default 10
+	range 2 1000
+	help
+	  If pid_run() was not called for longer than this many regular steps,
+	  the pause counts as one regular step.  A pause while the output is
+	  off therefore does not end up in the integral.
+
 endif # PID_CONTROLLER

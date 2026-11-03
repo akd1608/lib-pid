@@ -18,6 +18,24 @@ static int pid_handleOldError(pid_controller_t *pid);
 static double pid_checkOvershoot(pid_constrain_t constrain, double value);
 static double pid_checkWindup(pid_controller_t *pid, double input);
 
+/*
+ * Time since the last run.  The first run and a run after a long pause (the
+ * caller did not run the controller, e.g. the heater was resting) count as one
+ * regular step, so a pause does not end up in the integral as one huge step.
+ */
+static uint32_t pid_elapsedMs(const pid_controller_t *pid, int64_t now)
+{
+	uint32_t nominal = pid->param.sample_nominal;
+	int64_t elapsed = now - (int64_t)pid->last_stamp;
+
+	if (pid->last_stamp == 0U ||
+	    (nominal > 0U && elapsed > (int64_t)nominal * CONFIG_PID_SAMPLE_GAP_FACTOR)) {
+		return nominal > 0U ? nominal : 1U;
+	}
+	/* Two runs in the same millisecond: the derivative divides by this */
+	return elapsed > 0 ? (uint32_t)elapsed : 1U;
+}
+
 int pid_init(pid_controller_t *pid, pid_type_t type)
 {
 	pid->type = type;
@@ -28,7 +46,8 @@ int pid_init(pid_controller_t *pid, pid_type_t type)
 int pid_run(pid_controller_t *pid, double input, double *output)
 {
 	int64_t now = k_uptime_get();
-	pid->param.sample_time = now - pid->last_stamp;
+	pid->param.sample_time = pid_elapsedMs(pid, now);
+	pid->last_stamp = now;
 	pid->error[PID_ERROR0] = pid->set_point - input;
 	double temp = 0.f;
     switch (pid->type) {
@@ -92,6 +111,7 @@ int pid_tuneParam(pid_controller_t *pid, double kp, double ki, uint32_t sample_t
 	pid->param.ki = ki;
 	pid->param.kp = kp;
 	pid->param.sample_time = sample_time;
+	pid->param.sample_nominal = sample_time;
 	if (pid->type == PID_TYPE_SPEED_UP) {
 		pid_updateQ(pid);
 	}
@@ -118,7 +138,7 @@ static int pid_classic(pid_controller_t *pid, double *output)
 {
 	double temp_p = pid->param.kp * pid->error[PID_ERROR0];
 
-	pid->set.sum = pid->error[PID_ERROR0] * pid->param.sample_time;
+	pid->set.sum += pid->error[PID_ERROR0] * pid->param.sample_time;
 	pid->set.sum = pid_checkWindup(pid, pid->set.sum);
 	double temp_i = pid->param.ki * pid->set.sum;
 

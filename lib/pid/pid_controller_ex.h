@@ -44,7 +44,8 @@ typedef struct {
 	double ki;
 	double kd[PID_KDn];
 	double q[PID_Qn];
-	uint32_t sample_time;
+	uint32_t sample_time;    /* time of the last step (ms)  */
+	uint32_t sample_nominal; /* time set when tuning (ms)   */
 } pid_param_t;
 
 
